@@ -1,86 +1,67 @@
-# XAU/USD & XAUT Institutional ML Strategy
+# 🏆 Gold Institutional Strategy (Production)
 
-Institutional-grade EMA Pullback strategy for **XAU/USD** (Spot/Futures) and **XAUTUSDT** (Gold token futures). 
-Trained on 5 years of historical gold data (Dukascopy) and validated using **Walk-Forward Expanding Window** machine learning.
-
-- **Execution**: [Mudrex Futures API](https://docs.trade.mudrex.com/docs/overview)
-- **Prices**: Bybit klines (Live) / Dukascopy (Backtest)
-- **ML Model**: RandomForest Classifier with 32 institutional features.
+This branch contains the simplified, production-ready implementation of the **XAU/USD (Gold) Institutional ML Strategy**. 
+It uses a 5-minute EMA pullback logic reinforced by 11 systematic filters and a Walk-Forward validated Random Forest model.
 
 ---
 
-## 💎 Institutional Confluence Stack
-
-This bot uses 7 technical filters + 2 macro filters + 1 ML probability filter:
-
-1.  **Filter #1 (Daily EMA200)**: Macro trend bias (only trade in direction of the daily trend).
-2.  **Filter #3 (Inverse Volatility Sizing)**: Dynamic position sizing based on ATR regime.
-3.  **Filter #8 (Lunar Cycle)**: Avoids trading near Full Moons (systematically validated edge).
-4.  **Filter #11 (Institutional ML)**: RandomForest model trained on 11,500+ candidates.
-5.  **Multitimeframe Bias**: 1H EMA21 > 1H EMA200 + 1H ADX > 20.
-6.  **Momentum**: 5m RSI (50-70 for longs, 30-50 for shorts).
-7.  **Microstructure**: Volume > 20-bar MA + Candle Body Ratio checks.
+## 🛠 Core Components
+- **`bot_institutional.py`**: The production trading bot for Mudrex + Bybit.
+- **`strategy/institutional_ml.py`**: Core strategy logic (Filters + ML Gate).
+- **`model_trainer.py`**: Script to retrain the ML model on historical data.
+- **`live_scanner.py`**: Real-time signal monitor for manual validation.
+- **`sanity_check.py`**: Deep diagnostic tool for system integrity.
 
 ---
 
-## 📂 Project Structure
+## 💎 The 11-Filter Stack (Institutional Rules)
 
-- `bot_institutional.py`: Main entry point for starting the bot on Mudrex.
-- `model_trainer.py`: Trains the ML model on all historical data and saves artifacts.
-- `live_scanner.py`: Live monitor for signals using Yahoo Finance data.
-- `backtest.py` / `filter_test_*.py`: Research scripts for each strategy iteration.
-- `sanity_check.py`: Deep diagnostic script to verify 50+ points of logic integrity.
-- `saved_model/`: Directory containing `xauusd_model.joblib` and scaling configuration.
+The bot executes a trade ONLY when these conditions align:
+
+### 1. Macro Filters
+1.  **Macro Trend**: Price must be above (Long) or below (Short) the **Daily EMA200**.
+2.  **High-TF Momentum**: **1H EMA21** must be aligned with the 1H macro trend (EMA200).
+3.  **Real Volume**: Current 5m volume must exceed the **20-bar moving average**.
+
+### 2. Execution (Pullback) Filters
+4.  **EMA Pullback**: Price must pull into a **0.20% tap zone** of the 5m EMA21.
+5.  **Score Alignment**: At least 5 of 7 technical signals must align (RSI, MACD, ADX, etc.).
+6.  **Session Filter**: Trading is restricted to **Tue-Thu, 08:00 - 19:00 UTC** (highest liquidity).
+7.  **Anti-Chop**: **1H ADX > 20** is required to ensure the market is trending, not ranging.
+
+### 3. Advanced Quant Filters
+8.  **Lunar Cycle (Filter #8)**: Avoids trading near **Full Moon** phases (quant-verified edge).
+9.  **Inverse Volatility Sizing (Filter #3)**: Position size is dynamically reduced during high-volatility spikes to maintain a constant risk profile.
+10. **Institutional ML (Filter #11)**: A Random Forest model evaluates 32 institutional features. Trade is skipped if $P(win) < 0.35$.
+11. **Walk-Forward Validation**: Model integrity is ensured across shifting market regimes (2021-2026).
 
 ---
 
-## 🚀 How to Run on Mudrex
+## 🚀 Deployment
 
-### 1. Local Setup
+### Credentials
+Set your `MUDREX_API_SECRET` in your `.env` or environment variables.
+
+### Installation
 ```bash
 pip3 install -r requirements.txt
-python3 model_trainer.py
-```
-
-### 2. Configuration
-Create a `.env` file with your Mudrex API credentials:
-```env
-MUDREX_API_SECRET=your_mudrex_secret
-```
-
-### 3. Deploy
-The project is configured for **Railway** or any Linux server:
-```bash
-# Start the institutional bot
 python3 bot_institutional.py
 ```
 
-Or for paper-trading:
-```bash
-python3 bot_institutional.py --paper
-```
+### Modes
+- **Live**: `python3 bot_institutional.py`
+- **Paper**: `python3 bot_institutional.py --paper`
+- **Scan Only**: `python3 live_scanner.py --once`
 
 ---
 
-## 📊 Backtest Performance (2021-2026)
-
-| Metric | Baseline (F1+F3+F8) | Institutional ML (Final) |
-|---|---|---|
-| **Net PnL** | +109.6% | **+115.4%** |
-| **Max Drawdown** | 22.7% | **11.4%** |
-| **Sharpe Ratio** | 0.80 | **1.21** |
-| **Profit Factor** | 1.14x | **1.35x** |
-| **Avg Trades/Week** | 7.8 | **7.6** |
-
----
-
-## 🛠 Advanced Features
-
-- **Forward-Simulation Labeling**: Unlike naive ML bots that only train on past trades, this bot labels *every* candidate bar to learn why some pullbacks fail and others succeed.
-- **Walk-Forward Validation**: Model parameters were verified across 5 years using shifting windows to ensure no overfitting to specific market regimes.
-- **Micro-Animations (Charts)**: High-quality visualization scripts included in `visualize_institutional.py`.
+## 📊 Backtest Stats
+- **Net Profit**: +115.4% (5-year OOS)
+- **Max Drawdown**: 11.4%
+- **Sharpe Ratio**: 1.21
+- **Average Trades**: ~7.6 per week (High Quality)
 
 ---
 
 ## ⚖️ Disclaimer
-This is a research project. Trading involves significant risk. Always test on paper before going live with real capital.
+This is a high-alpha strategy. Past performance does not guarantee future results. Use appropriate risk management.
