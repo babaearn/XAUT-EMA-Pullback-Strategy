@@ -1,0 +1,6 @@
+session,total_trades,wins,losses,pct_return
+Asian Session (00:00-08:00 UTC),281,88,193,-18.58
+Late NY / Sydney (22:00-24:00 UTC),73,24,49,-3.26
+London Morning (08:00-13:00 UTC),174,53,121,-9.97
+NY / London Overlap (13:00-17:00 UTC),268,93,175,5.78
+New York Afternoon (17:00-22:00 UTC),167,52,115,-8.53
